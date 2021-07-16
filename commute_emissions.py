@@ -38,13 +38,10 @@ commute_emissions["Census Percent Drive Alone"] = pd.to_numeric(commute_emission
 
 commute_emissions["adjusted_drive_alone_distance"] = commute_emissions["Distance"]*commute_emissions["Census Percent Drive Alone"]
 
-co2_per_mi = 404    # average emissions per mile for passenger vehicle
-                    # https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle
+lbs_co2_per_mi = 404*0.00220462     # average grams emissions per mile for passenger vehicle
+                                    # https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle
+                                    # converted to lbs
 
-commute_emissions["adjusted_grams_co2"] = commute_emissions["adjusted_drive_alone_distance"]*co2_per_mi
+commute_emissions["adjusted_lbs_co2"] = commute_emissions["adjusted_drive_alone_distance"]*lbs_co2_per_mi
 
-commute_emissions_sum = commute_emissions.groupby("DUTY CITY").agg({
-    'adjusted_grams_co2':['sum']}).reset_index()
-
-commute_emissions.to_csv("commute_emissions.csv")
-commute_emissions_sum.to_csv("commute_emissions_sum.csv")
+commute_emissions['city_distance_cumsum_co2'] = commute_emissions.sort_values('Distance').groupby('City')['adjusted_lbs_co2'].transform(pd.Series.cumsum)
