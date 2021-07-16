@@ -34,6 +34,7 @@ for code in cbsa_codes:
 commute_emissions = commute.merge(drive_pe).drop(["DUTY CITY", "CBSA"],axis=1)
 
 commute_emissions["Distance"] = pd.to_numeric(commute_emissions["Distance"])
+commute_emissions = commute_emissions[commute_emissions["Distance"] <= 100] # there are some outlier commutes of over 100 miles. These are likely errors
 commute_emissions["Census Percent Drive Alone"] = pd.to_numeric(commute_emissions["Census Percent Drive Alone"])/100
 
 commute_emissions["adjusted_drive_alone_distance"] = commute_emissions["Distance"]*commute_emissions["Census Percent Drive Alone"]
@@ -43,5 +44,5 @@ lbs_co2_per_mi = 404*0.00220462     # average grams emissions per mile for passe
                                     # converted to lbs
 
 commute_emissions["adjusted_lbs_co2"] = commute_emissions["adjusted_drive_alone_distance"]*lbs_co2_per_mi
-
-commute_emissions['city_distance_cumsum_co2'] = commute_emissions.sort_values('Distance').groupby('City')['adjusted_lbs_co2'].transform(pd.Series.cumsum)
+commute_emissions = commute_emissions.sort_values(['Distance','City'])
+commute_emissions['city_distance_cumsum_co2'] = commute_emissions.groupby('City')['adjusted_lbs_co2'].apply(lambda x: x.cumsum())
